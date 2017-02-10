@@ -173,5 +173,24 @@ class OptionsHist:
         rows = c.fetchall()
 
         # print('opthist.nth_opt', kwargs['date'], rows[nth_expiry], rows[nth_expiry][3])
+
         return dict(zip(OptionsHist.columns, rows[nth_expiry]))
+
+    def option_exit_data(self, option_entry, exit_date):
+
+        qry = """SELECT * FROM opthist WHERE symbol = '{}' AND expiry = '{}' AND type = '{}' AND date = '{}' AND
+                strikeprice = {}""".format(option_entry['symbol'], option_entry['expiry'], option_entry['type'],
+                                           exit_date, option_entry['strikeprice'])
+
+        # print("OptionsHist.option_exit_data", qry)
+
+        c = self.conn.cursor()
+        c.execute(qry)
+        rows = c.fetchall()
+
+        #print("OptionsHist.option_exit_data", OptionsHist.columns, rows)
+
+        #print("OptionsHist.option_exit_data2", dict(zip(OptionsHist.columns, rows[0])))
+
+        return dict(zip(OptionsHist.columns, rows[0]))
 

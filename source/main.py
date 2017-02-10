@@ -33,7 +33,7 @@ tt = trade.TradeTest(root, dataFile, optionsDB)
 s = tt.signals()
 t = tt.trades(s)
 # tt.sel_options(t)
-print(tt.backtest(start='2016-01-05',end='2016-06-14'))
+print(tt.backtest(start='2016-01-04',end='2016-06-14'))
 #print(tt.backtest())
 
 
