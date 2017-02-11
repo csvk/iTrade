@@ -178,9 +178,10 @@ class OptionsHist:
 
     def option_exit_data(self, option_entry, exit_date):
 
-        qry = """SELECT * FROM opthist WHERE symbol = '{}' AND expiry = '{}' AND type = '{}' AND date = '{}' AND
-                strikeprice = {}""".format(option_entry['symbol'], option_entry['expiry'], option_entry['type'],
-                                           exit_date, option_entry['strikeprice'])
+        qry = """SELECT * FROM opthist WHERE symbol = '{}' AND expiry = '{}' AND type = '{}' AND date > '{}' AND
+                strikeprice = {} ORDER BY date ASC""".format(option_entry['symbol'], option_entry['expiry'],
+                                                                 option_entry['type'], exit_date,
+                                                                 option_entry['strikeprice'])
 
         # print("OptionsHist.option_exit_data", qry)
 

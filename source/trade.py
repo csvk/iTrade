@@ -140,6 +140,7 @@ class TradeTest:
 
 
     def sel_option(self, signal_data):
+        """Return selected option based on signal_data"""
 
         optSymbol = 'NIFTY' if signal_data['Symbol'] == 'NSENIFTY' else signal_data['Symbol']
         optType = "CE" if signal_data['Signal'] == "CE Buy" else "PE"
@@ -159,6 +160,7 @@ class TradeTest:
 
 
     def option_exit_data(self, i, option_entry):
+        """Return option data on exit date based on option_entry"""
 
         exit_date = self.dataHist.bar(i)['Date']
         exit_data = self.oh.option_exit_data(option_entry, exit_date)
@@ -168,6 +170,24 @@ class TradeTest:
 
     def backtest(self, start=0, end=0, latitude=0, exittarget=2, nth_expiry=0, nth_strike=0, midmonth_cutoff=10,
                  entrytime='sod'):
+        """Return historical trades
+        Return format: {entry date in YYYY-MM-DD: {"entry": {option data from sel_option()},
+                                                   "exit": {option data from option_exit_data()}
+                                 },
+                        entry date in YYYY-MM-DD: {"entry": {option data from sel_option()},
+                                                   "exit": {option data from option_exit_data()}
+                                 },......
+                        }
+        Call format: backtest(start=0,              start date for backtest in YYYY-MM-DD
+                              end=0,                end date for backtest in YYYY-MM-DD
+                              latitude=0,           additional percentage difference required for buy/sell signals
+                              exittarget=2,         exit target in multiple of entry price
+                              nth_expiry=0,         option expiry month to be selected
+                              nth_strike=0,         option strike price to be selected
+                              midmonth_cutoff=10    cut-off date to be used to select immediate expiry or next
+                              entrytime='sod'       entry on same end of day ('eod') or next day start of day ('sod')
+                            )
+        """
 
         if start == 0 or start < self.dataHist.value['Date'][0]:
             start = self.dataHist.value['Date'][0]
@@ -186,46 +206,67 @@ class TradeTest:
         sell = np.logical_and(self.dataHist.value['BarUpDown'] == -1,
                               self.dataHist.value['Close'] < self.dataHist.value['HL Value'] * (1 - latitude))
 
-        option_entries = []
+        trades = {}
         CE_bought, CE_sold, PE_bought, PE_sold = False, False, False, False
-        selected_option, option_expiry = None, None
+        selected_option = None
+        CE_entry_date, PE_entry_date = None, None
 
         for i in range(self.dataHist.barindex[start], self.dataHist.barindex[end]):
             # print(i, buy[i], sell[i])
             if buy[i]:
                 if PE_bought:
-                    exit_option = self.option_exit_data(i, option_entries[len(option_entries) - 1]) # Exit PE Option
+                    exit_option = self.option_exit_data(i, trades[PE_entry_date]["entry"]) # Exit PE Option
                     # print('Tradetest.backtest exit option', exit_option)
-                    option_entries.append(exit_option)
+                    # option_entries.append(exit_option)
+                    trades[PE_entry_date]['exit'] = exit_option
                     PE_bought, PE_sold = False, True
-                    print('Tradetest.backtest PE Exit', self.dataHist.bar(i)['Date'], exit_option['type'],
-                          exit_option['expiry'])
+                    # print('Tradetest.backtest PE Exit', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
+                    #      exit_option['type'], 'expiry', exit_option['expiry'])
+                    # print('Tradetest.backtest PE Exit', 'entrydate', PE_entry_date, 'exitdate',
+                    #      trades[PE_entry_date]['exit']['date'], 'type', trades[PE_entry_date]['exit']['type'],
+                    #      'expiry', trades[PE_entry_date]['exit']['expiry'])
                 if not CE_bought:
-                    selected_option = self.sel_option(self.signal_data(i, "CE Buy"))
-                    selected_option['signal'] = 'CE Entry'
+                    selected_option = self.sel_option(self.signal_data(i, "CE Buy")) # Entry CE Option
+                    CE_entry_date = selected_option['date']
+                    trades[CE_entry_date] = {}
+                    trades[CE_entry_date]['entry'] = selected_option
+                    # selected_option['signal'] = 'CE Entry'
                     # print('Tradetest.backtest selected option', selected_option)
-                    option_entries.append(selected_option)
-                    option_expiry = selected_option['expiry']
+                    # option_entries.append(selected_option)
+                    # option_expiry = selected_option['expiry']
                     CE_bought, CE_sold = True, False
-                    print('Tradetest.backtest CE Entry', self.dataHist.bar(i)['Date'], selected_option['type'],
-                          selected_option['expiry'])
+                    # print('Tradetest.backtest CE Entry', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
+                    #      selected_option['type'], 'expiry', selected_option['expiry'])
+                    # print('Tradetest.backtest CE Entry', 'entrydate', CE_entry_date, 'entrydate',
+                    #      trades[CE_entry_date]['entry']['date'], 'type', trades[CE_entry_date]['entry']['type'],
+                    #      'expiry', trades[CE_entry_date]['entry']['expiry'])
             elif sell[i]:
                 if CE_bought:
-                    exit_option = self.option_exit_data(i, option_entries[len(option_entries) - 1]) # Exit CE Option
+                    exit_option = self.option_exit_data(i, trades[CE_entry_date]["entry"]) # Exit CE Option
+                    trades[CE_entry_date]['exit'] = exit_option
                     # print('Tradetest.backtest exit option', exit_option)
-                    option_entries.append(exit_option)
+                    # option_entries.append(exit_option)
                     CE_bought, CE_sold = False, True
-                    print('Tradetest.backtest CE Exit', self.dataHist.bar(i)['Date'], exit_option['type'],
-                          exit_option['expiry'])
+                    # print('Tradetest.backtest CE Exit', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
+                    #      exit_option['type'], 'expiry', exit_option['expiry'])
+                    # print('Tradetest.backtest CE Exit', 'entrydate', CE_entry_date, 'exitdate',
+                    #      trades[CE_entry_date]['exit']['date'], 'type', trades[CE_entry_date]['exit']['type'],
+                    #      'expiry', trades[CE_entry_date]['exit']['expiry'])
                 if not PE_bought:
-                    selected_option = self.sel_option(self.signal_data(i, "PE Buy"))
-                    selected_option['signal'] = 'PE Entry'
+                    selected_option = self.sel_option(self.signal_data(i, "PE Buy")) # Entry PE Option
+                    PE_entry_date = selected_option['date']
+                    trades[PE_entry_date] = {}
+                    trades[PE_entry_date]['entry'] = selected_option
+                    # selected_option['signal'] = 'PE Entry'
                     # print('Tradetest.backtest selected option', selected_option)
-                    option_entries.append(selected_option)
-                    option_expiry = selected_option['expiry']
+                    # option_entries.append(selected_option)
+                    # option_expiry = selected_option['expiry']
                     PE_bought, PE_sold = True, False
-                    print('TradeTest.backtest PE Entry', self.dataHist.bar(i)['Date'], selected_option['type'],
-                          selected_option['expiry'])
+                    # print('TradeTest.backtest PE Entry', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
+                    #      selected_option['type'], 'expiry', selected_option['expiry'])
+                    # print('TradeTest.backtest PE Entry', 'entrydate', PE_entry_date, 'entrydate',
+                    #      trades[PE_entry_date]['entry']['date'], 'type', trades[PE_entry_date]['entry']['type'],
+                    #      'expiry', trades[PE_entry_date]['entry']['expiry'])
             else:
                 pass
             # print('TradeTest.backtest', self.dataHist.bar(i)['Date'], bought, sold, option_entries[len(option_entries) - 1]['expiry'])
@@ -233,7 +274,7 @@ class TradeTest:
             #     print('Tradetest.backtest Exit', self.dataHist.bar(i)['Date'])
 
 
-        return option_entries
+        return trades
 
 
 
