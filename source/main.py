@@ -31,17 +31,3 @@ print(tt.dataHist.header)
 data = {'Entry Type':'PE', 'Expiry':'test', 'Strike Price':10}
 tt.dataHist.add_data_by_bar(10, data)
 tt.dataHist.add_data_by_date('2006-12-11', data)
-
-
-
-
-# print('bars : ', test.dataHist.barcount, 'signals : ', len(s))
-
-"""
-for i in range(0, test.dataHist.barcount):
-    # print(i)
-    # print(i, test.dataHist.value['DATE'][i], 'LH Val : ', test.dataHist.value['LH Value'][i], 'HL Val : ',
-    #      test.dataHist.value['HL Value'][i], 'Close : ', test.dataHist.value['Close'][i], s[i])
-    print(i, test.dataHist.value['Date'][i],s[i] )
-
-"""
