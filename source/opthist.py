@@ -125,9 +125,6 @@ class OptionsHist:
         print('opthist.immediate_opt', rows[0])
         return dict(zip(OptionsHist.columns, rows[0]))
 
-        # self.selectedOption = rows[0]
-
-        # return self.selectedOption
 
     def nth_opt(self, nth_expiry, nth_strike, midmonth_cutoff, entrytime, **kwargs):
         """ Return nth option data """
@@ -135,8 +132,6 @@ class OptionsHist:
         qry = '''SELECT * FROM opthist WHERE''' #symbol={}'''.format(kwargs['symbol'])
 
         # print("OptionsHist.nth_opt", kwargs)
-
-        #orderby = None
 
         for field, val in kwargs.items():
             #print("# ", field, val)
@@ -146,8 +141,6 @@ class OptionsHist:
             elif field == "date":
                 compare = '=' if entrytime=='eod' else '>'
                 qry += ' AND {} {} {}'.format("date", compare, val)
-                # qry += ' AND {} {} {}'.format("strikeprice", compare, val)
-                #qry += r" AND {} > '{}'".format("expiry", self.expiry_month_new(val[1:11], nth_expiry))
                 qry += r" AND {} BETWEEN '{}' AND '{}'".format(
                     "expiry",
                     self.expiry_month_new(val[1:11], nth_expiry, midmonth_cutoff)[0],
@@ -155,10 +148,8 @@ class OptionsHist:
                 )
             elif field == "close":
                 if kwargs['type'] == r"'CE'":
-                    #compare, orderby = '>=', 'ASC'
                     val = val - val % 100 + 100 * (nth_strike + 1)
                 else:
-                    #compare, orderby = '<=', 'DESC'
                     val = val - val % 100 - 100 * nth_strike
                 qry += ' AND strikeprice = {}'.format(val)
             else:
@@ -171,8 +162,6 @@ class OptionsHist:
         c = self.conn.cursor()
         c.execute(qry)
         rows = c.fetchall()
-
-        # print('opthist.nth_opt', kwargs['date'], rows[nth_expiry], rows[nth_expiry][3])
 
         return dict(zip(OptionsHist.columns, rows[nth_expiry]))
 

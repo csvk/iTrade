@@ -35,8 +35,6 @@ class TradeTest:
 
         print('TradeTest.__init__', self.testFile)
 
-        # self.wb = xl.load_workbook(self.testFile)
-
         self.dataHist = DataHist(self.testFile)
 
         # print(data.bar(len(data.date) - 1)['date'])
@@ -61,14 +59,13 @@ class TradeTest:
         bought, sold = False, False
 
         for i in range(0, self.dataHist.barcount):
-            # print(i, buy[i], sell[i])
-            if buy[i]:  # and buy[i] != prevBuy:
+            if buy[i]:
                 if not bought:
                     signals.append("Buy")
                     bought, sold = True, False
                 else:
                     signals.append(None)
-            elif sell[i]:  # and sell[i] != prevSell:
+            elif sell[i]:
                 if not sold:
                     signals.append("Sell")
                     sold, bought = True, False
@@ -98,9 +95,7 @@ class TradeTest:
                         'Signal': signals[i]
                     }
                 )
-                # print(trades[len(trades)-1]['Date'], trades[len(trades)-1]['Signal'])
 
-        # print(len(trades))
         return trades
 
 
@@ -122,7 +117,6 @@ class TradeTest:
                     close=trades[i]['Close']
                 )
             )
-            # print(optTrades[len(optTrades)-1])
 
 
     def signal_data(self, bar, signal):
@@ -216,62 +210,27 @@ class TradeTest:
             if buy[i]:
                 if PE_bought:
                     exit_option = self.option_exit_data(i, trades[PE_entry_date]["entry"]) # Exit PE Option
-                    # print('Tradetest.backtest exit option', exit_option)
-                    # option_entries.append(exit_option)
                     trades[PE_entry_date]['exit'] = exit_option
                     PE_bought, PE_sold = False, True
-                    # print('Tradetest.backtest PE Exit', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
-                    #      exit_option['type'], 'expiry', exit_option['expiry'])
-                    # print('Tradetest.backtest PE Exit', 'entrydate', PE_entry_date, 'exitdate',
-                    #      trades[PE_entry_date]['exit']['date'], 'type', trades[PE_entry_date]['exit']['type'],
-                    #      'expiry', trades[PE_entry_date]['exit']['expiry'])
                 if not CE_bought:
                     selected_option = self.sel_option(self.signal_data(i, "CE Buy")) # Entry CE Option
                     CE_entry_date = selected_option['date']
                     trades[CE_entry_date] = {}
                     trades[CE_entry_date]['entry'] = selected_option
-                    # selected_option['signal'] = 'CE Entry'
-                    # print('Tradetest.backtest selected option', selected_option)
-                    # option_entries.append(selected_option)
-                    # option_expiry = selected_option['expiry']
                     CE_bought, CE_sold = True, False
-                    # print('Tradetest.backtest CE Entry', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
-                    #      selected_option['type'], 'expiry', selected_option['expiry'])
-                    # print('Tradetest.backtest CE Entry', 'entrydate', CE_entry_date, 'entrydate',
-                    #      trades[CE_entry_date]['entry']['date'], 'type', trades[CE_entry_date]['entry']['type'],
-                    #      'expiry', trades[CE_entry_date]['entry']['expiry'])
             elif sell[i]:
                 if CE_bought:
                     exit_option = self.option_exit_data(i, trades[CE_entry_date]["entry"]) # Exit CE Option
                     trades[CE_entry_date]['exit'] = exit_option
-                    # print('Tradetest.backtest exit option', exit_option)
-                    # option_entries.append(exit_option)
                     CE_bought, CE_sold = False, True
-                    # print('Tradetest.backtest CE Exit', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
-                    #      exit_option['type'], 'expiry', exit_option['expiry'])
-                    # print('Tradetest.backtest CE Exit', 'entrydate', CE_entry_date, 'exitdate',
-                    #      trades[CE_entry_date]['exit']['date'], 'type', trades[CE_entry_date]['exit']['type'],
-                    #      'expiry', trades[CE_entry_date]['exit']['expiry'])
                 if not PE_bought:
                     selected_option = self.sel_option(self.signal_data(i, "PE Buy")) # Entry PE Option
                     PE_entry_date = selected_option['date']
                     trades[PE_entry_date] = {}
                     trades[PE_entry_date]['entry'] = selected_option
-                    # selected_option['signal'] = 'PE Entry'
-                    # print('Tradetest.backtest selected option', selected_option)
-                    # option_entries.append(selected_option)
-                    # option_expiry = selected_option['expiry']
                     PE_bought, PE_sold = True, False
-                    # print('TradeTest.backtest PE Entry', 'signaldate', self.dataHist.bar(i)['Date'], 'type',
-                    #      selected_option['type'], 'expiry', selected_option['expiry'])
-                    # print('TradeTest.backtest PE Entry', 'entrydate', PE_entry_date, 'entrydate',
-                    #      trades[PE_entry_date]['entry']['date'], 'type', trades[PE_entry_date]['entry']['type'],
-                    #      'expiry', trades[PE_entry_date]['entry']['expiry'])
             else:
                 pass
-            # print('TradeTest.backtest', self.dataHist.bar(i)['Date'], bought, sold, option_entries[len(option_entries) - 1]['expiry'])
-            # if (bought or sold) and self.dataHist.bar(i)['Date'] == option_entries[len(option_entries) - 1]['expiry']:
-            #     print('Tradetest.backtest Exit', self.dataHist.bar(i)['Date'])
 
 
         return trades
@@ -291,7 +250,6 @@ class DataHist:
 
         self.wsc = self.wb.get_sheet_by_name('columns')  # columns tab
 
-        # self.header = []  # format: [['column name', column number], ..... ]
         self.header = {}  # format: {'column name': column number, ..... ]
 
         col = 1
@@ -306,23 +264,17 @@ class DataHist:
 
         self.value = {}  # format: {'column name' : [row1_val, row2_val....], ......}
 
-        #for item in self.header:
-            # self.value[item[0]] = self.xl_column(item[1])
-        # print('DataHist init', self.header)
         for name, position in self.header.items():
             self.value[name] = self.xl_column(position)
 
         self.barindex = {}
 
-        # if 'Date' in [column[0] for column in self.header]:
         if 'Date' in self.header:
             for i in range(0, len(self.value['Date'])):
                 self.barindex[self.value['Date'][i]] = i
 
 
         self.barcount = len(self.xl_column(0)) # number of bars in data tab
-
-        # print(self.data['DATE'][len(self.data['DATE'])-1])
 
 
     def xl_column(self, col):
@@ -353,8 +305,6 @@ class DataHist:
 
     def add_column_names(self, *columns):
         """Add new column names in columns tab"""
-
-        # wsc = wb.get_sheet_by_name('columns')  # columns tab
 
         next_column = len(self.header) + 1
 
