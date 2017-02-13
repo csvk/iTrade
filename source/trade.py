@@ -35,9 +35,9 @@ class TradeTest:
 
         print('TradeTest.__init__', self.testFile)
 
-        self.wb = xl.load_workbook(self.testFile)
+        # self.wb = xl.load_workbook(self.testFile)
 
-        self.dataHist = DataHist(self.wb)
+        self.dataHist = DataHist(self.testFile)
 
         # print(data.bar(len(data.date) - 1)['date'])
 
@@ -281,45 +281,54 @@ class TradeTest:
 class DataHist:
     """Class to access historical data"""
 
-    def __init__(self, wb):
+    def __init__(self, dataFile):
         """Populate all columns and bars"""
+
+        self.fileName = dataFile
+        self.wb = xl.load_workbook(self.fileName)
 
         # Read column headers
 
-        wsc = wb.get_sheet_by_name('columns')  # columns tab
+        self.wsc = self.wb.get_sheet_by_name('columns')  # columns tab
 
-        self.header = []  # format: [['column name', column number], ..... ]
+        # self.header = []  # format: [['column name', column number], ..... ]
+        self.header = {}  # format: {'column name': column number, ..... ]
 
         col = 1
-        while wsc.cell(row=1, column=col).value is not None:
-            self.header.append([wsc.cell(row=1, column=col).value, col-1])
+        while self.wsc.cell(row=1, column=col).value is not None:
+            # self.header.append([self.wsc.cell(row=1, column=col).value, col-1])
+            self.header[self.wsc.cell(row=1, column=col).value] = col - 1
             col += 1
 
         # Populate all data
 
-        wsd = wb.get_sheet_by_name('data') # data tab
+        self.wsd = self.wb.get_sheet_by_name('data') # data tab
 
         self.value = {}  # format: {'column name' : [row1_val, row2_val....], ......}
 
-        for item in self.header:
-            self.value[item[0]] = self.xl_column(wsd, item[1])
+        #for item in self.header:
+            # self.value[item[0]] = self.xl_column(item[1])
+        # print('DataHist init', self.header)
+        for name, position in self.header.items():
+            self.value[name] = self.xl_column(position)
 
         self.barindex = {}
 
-        if 'Date' in [column[0] for column in self.header]:
+        # if 'Date' in [column[0] for column in self.header]:
+        if 'Date' in self.header:
             for i in range(0, len(self.value['Date'])):
                 self.barindex[self.value['Date'][i]] = i
 
 
-        self.barcount = len(self.xl_column(wsd, 0)) # number of bars in data tab
+        self.barcount = len(self.xl_column(0)) # number of bars in data tab
 
         # print(self.data['DATE'][len(self.data['DATE'])-1])
 
 
-    def xl_column(self, wsd, col):
+    def xl_column(self, col):
         """Return numpy for each column"""
 
-        return np.array([r[col].value for r in wsd.iter_rows()])
+        return np.array([r[col].value for r in self.wsd.iter_rows()])
 
 
     def bar(self, i):
@@ -342,14 +351,33 @@ class DataHist:
         """
         return self.bar(self.barindex[date])
 
+    def add_column_names(self, *columns):
+        """Add new column names in columns tab"""
+
+        # wsc = wb.get_sheet_by_name('columns')  # columns tab
+
+        next_column = len(self.header) + 1
+
+        for column in columns:
+            self.wsc.cell(row=1, column=next_column).value = column
+            self.header[column] = next_column - 1
+            next_column += 1
+
+        self.wb.save(self.fileName)
 
 
+    def add_data_by_bar(self, bar, data):
 
+        for column, value in data.items():
+            self.wsd.cell(row=bar, column=self.header[column] + 1).value = value
 
+        self.wb.save(self.fileName)
 
+    def add_data_by_date(self, date, data):
 
+        for column, value in data.items():
+            self.wsd.cell(row=self.barindex[date] + 1, column=self.header[column] + 1).value = value
 
-
-
+        self.wb.save(self.fileName)
 
 

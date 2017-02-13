@@ -33,7 +33,15 @@ tt = trade.TradeTest(root, dataFile, optionsDB)
 s = tt.signals()
 t = tt.trades(s)
 # tt.sel_options(t)
+# tt.backtest(start='2016-01-04',end='2016-06-14')
 print(tt.backtest(start='2016-01-04',end='2016-06-14'))
+tt.dataHist.add_column_names('Entry Type', 'Expiry', 'Strike Price', 'Entry Date', 'Entry Open', 'Entry High',
+                             'Entry Low', 'Entry Close', 'Entry LTP', 'Exit Date', 'Exit Open', 'Exit High',
+                             'Exit Low', 'Exit Close', 'Exit LTP')
+print(tt.dataHist.header)
+data = {'Entry Type':'PE', 'Expiry':'test', 'Strike Price':10}
+tt.dataHist.add_data_by_bar(10, data)
+tt.dataHist.add_data_by_date('2006-12-11', data)
 #print(tt.backtest())
 
 
