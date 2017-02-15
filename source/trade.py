@@ -161,6 +161,30 @@ class TradeTest:
 
         return exit_data
 
+    def write_trade_data(self, trade):
+
+        entry_date = None
+        # print(trade)
+
+
+        for signal, data in trade.items():
+            if signal == 'entry':
+                entry_data = {'Entry Type': data['type'], 'Expiry': data['expiry'], 'Strike Price': data['expiry'],
+                              'Entry Date': data['date'], 'Entry Open': data['open'], 'Entry High': data['high'],
+                              'Entry Low': data['low'], 'Entry Close': data['close'], 'Entry LTP': data['ltp']
+                              }
+                self.dataHist.write_data_by_date(data['date'], entry_data)
+                entry_date = data['date']
+            elif signal == 'exit':
+                entry_data = {'Exit Date': data['date']}
+                self.dataHist.write_data_by_date(entry_date, entry_data)
+                exit_data = {'In_Market Expiry': data['expiry'], 'In_Market Strike Price': data['expiry'],
+                             'In_Market Open': data['open'], 'In_Market High': data['high'],
+                             'In_Market Low': data['low'], 'In_Market Close': data['close'],
+                             'In_Market LTP': data['ltp']
+                             }
+                self.dataHist.write_data_by_date(data['date'], exit_data)
+
 
     def backtest(self, start=0, end=0, latitude=0, exittarget=2, nth_expiry=0, nth_strike=0, midmonth_cutoff=10,
                  entrytime='sod'):
@@ -183,6 +207,11 @@ class TradeTest:
                             )
         """
 
+        self.dataHist.add_column_names('Entry Type', 'Expiry', 'Strike Price', 'Entry Date', 'Entry Open', 'Entry High',
+                                       'Entry Low', 'Entry Close', 'Entry LTP', 'Exit Date', 'In_Market Expiry',
+                                       'In_Market Strike Price', 'In_Market Open', 'In_Market High', 'In_Market Low',
+                                       'In_Market Close', 'In_Market LTP')
+
         if start == 0 or start < self.dataHist.value['Date'][0]:
             start = self.dataHist.value['Date'][0]
         if end == 0 or end > self.dataHist.value['Date'][self.dataHist.barcount - 1]:
@@ -202,11 +231,12 @@ class TradeTest:
 
         trades = {}
         CE_bought, CE_sold, PE_bought, PE_sold = False, False, False, False
-        selected_option = None
+        # selected_option, exit_option = None
         CE_entry_date, PE_entry_date = None, None
 
         for i in range(self.dataHist.barindex[start], self.dataHist.barindex[end]):
             # print(i, buy[i], sell[i])
+
             if buy[i]:
                 if PE_bought:
                     exit_option = self.option_exit_data(i, trades[PE_entry_date]["entry"]) # Exit PE Option
@@ -223,6 +253,7 @@ class TradeTest:
                     exit_option = self.option_exit_data(i, trades[CE_entry_date]["entry"]) # Exit CE Option
                     trades[CE_entry_date]['exit'] = exit_option
                     CE_bought, CE_sold = False, True
+                    self.write_trade_data(trades[CE_entry_date])
                 if not PE_bought:
                     selected_option = self.sel_option(self.signal_data(i, "PE Buy")) # Entry PE Option
                     PE_entry_date = selected_option['date']
@@ -316,14 +347,18 @@ class DataHist:
         self.wb.save(self.fileName)
 
 
-    def add_data_by_bar(self, bar, data):
+    def write_data_by_bar(self, bar, data):
+
+        # print('DataHist.write_data_by_bar', bar, data)
 
         for column, value in data.items():
             self.wsd.cell(row=bar, column=self.header[column] + 1).value = value
 
         self.wb.save(self.fileName)
 
-    def add_data_by_date(self, date, data):
+    def write_data_by_date(self, date, data):
+
+        # print('DataHist.write_data_by_date', date, data)
 
         for column, value in data.items():
             self.wsd.cell(row=self.barindex[date] + 1, column=self.header[column] + 1).value = value
