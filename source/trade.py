@@ -169,7 +169,7 @@ class TradeTest:
 
         for signal, data in trade.items():
             if signal == 'entry':
-                entry_data = {'Entry Type': data['type'], 'Expiry': data['expiry'], 'Strike Price': data['expiry'],
+                entry_data = {'Entry Type': data['type'], 'Expiry': data['expiry'], 'Strike Price': data['strikeprice'],
                               'Entry Date': data['date'], 'Entry Open': data['open'], 'Entry High': data['high'],
                               'Entry Low': data['low'], 'Entry Close': data['close'], 'Entry LTP': data['ltp']
                               }
@@ -177,8 +177,8 @@ class TradeTest:
                 entry_date = data['date']
             elif signal == 'exit':
                 entry_data = {'Exit Date': data['date']}
-                self.dataHist.write_data_by_date(entry_date, entry_data)
-                exit_data = {'In_Market Expiry': data['expiry'], 'In_Market Strike Price': data['expiry'],
+                self.dataHist.write_data_by_date(entry_date, entry_data) # Update exit date in entry bar
+                exit_data = {'In_Market Expiry': data['expiry'], 'In_Market Strike Price': data['strikeprice'],
                              'In_Market Open': data['open'], 'In_Market High': data['high'],
                              'In_Market Low': data['low'], 'In_Market Close': data['close'],
                              'In_Market LTP': data['ltp']
@@ -235,19 +235,46 @@ class TradeTest:
         CE_entry_date, PE_entry_date = None, None
 
         for i in range(self.dataHist.barindex[start], self.dataHist.barindex[end]):
-            # print(i, buy[i], sell[i])
+            print(i, self.dataHist.value['Date'][i])
+
+            # Exit trade on expiry day open
+
+            # print('TradeTest.backtest', self.dataHist.value['Date'], trades[CE_entry_date]['entry']['expiry'],
+            #      trades[PE_entry_date]['entry']['expiry'])
+
+
+
+            if CE_bought:
+                # print('TradeTest.backtest', self.dataHist.value['Date'][i])
+                # print('TradeTest.backtest', PE_entry_date)
+                # print('TradeTest.backtest', CE_bought, PE_bought, CE_bought or PE_bought)
+                if self.dataHist.value['Date'][i] == trades[CE_entry_date]['entry']['expiry']:
+                    # Exit option on expiry date
+                    exit_option = self.option_exit_data(i - 1, trades[CE_entry_date]["entry"])
+                    trades[CE_entry_date]['exit'] = exit_option
+                    CE_bought, CE_sold = False, True
+                    self.write_trade_data(trades[CE_entry_date])
+            elif PE_bought:
+                if self.dataHist.value['Date'][i] == trades[PE_entry_date]['entry']['expiry']:
+                    # Exit option on expiry date
+                    exit_option = self.option_exit_data(i - 1, trades[PE_entry_date]["entry"])  # Exit PE Option
+                    trades[PE_entry_date]['exit'] = exit_option
+                    PE_bought, PE_sold = False, True
+                    self.write_trade_data(trades[PE_entry_date])
 
             if buy[i]:
                 if PE_bought:
                     exit_option = self.option_exit_data(i, trades[PE_entry_date]["entry"]) # Exit PE Option
                     trades[PE_entry_date]['exit'] = exit_option
                     PE_bought, PE_sold = False, True
+                    self.write_trade_data(trades[PE_entry_date])
                 if not CE_bought:
                     selected_option = self.sel_option(self.signal_data(i, "CE Buy")) # Entry CE Option
                     CE_entry_date = selected_option['date']
                     trades[CE_entry_date] = {}
                     trades[CE_entry_date]['entry'] = selected_option
                     CE_bought, CE_sold = True, False
+                    self.write_trade_data(trades[CE_entry_date])
             elif sell[i]:
                 if CE_bought:
                     exit_option = self.option_exit_data(i, trades[CE_entry_date]["entry"]) # Exit CE Option
@@ -260,6 +287,7 @@ class TradeTest:
                     trades[PE_entry_date] = {}
                     trades[PE_entry_date]['entry'] = selected_option
                     PE_bought, PE_sold = True, False
+                    self.write_trade_data(trades[PE_entry_date])
             else:
                 pass
 

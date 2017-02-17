@@ -157,7 +157,7 @@ class OptionsHist:
 
         qry += ' ORDER BY date ASC, expiry ASC  LIMIT 1'
 
-        # print("OptionsHist.nth_opt", qry)
+        print("OptionsHist.nth_opt", qry)
 
         c = self.conn.cursor()
         c.execute(qry)
@@ -172,7 +172,7 @@ class OptionsHist:
                                                                  option_entry['type'], exit_date,
                                                                  option_entry['strikeprice'])
 
-        # print("OptionsHist.option_exit_data", qry)
+        print("OptionsHist.option_exit_data", qry)
 
         c = self.conn.cursor()
         c.execute(qry)
