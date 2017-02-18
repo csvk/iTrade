@@ -157,7 +157,7 @@ class OptionsHist:
 
         qry += ' ORDER BY date ASC, expiry ASC  LIMIT 1'
 
-        print("OptionsHist.nth_opt", qry)
+        # print("OptionsHist.nth_opt", qry)
 
         c = self.conn.cursor()
         c.execute(qry)
@@ -167,12 +167,14 @@ class OptionsHist:
 
     def option_exit_data(self, option_entry, exit_date):
 
-        qry = """SELECT * FROM opthist WHERE symbol = '{}' AND expiry = '{}' AND type = '{}' AND date > '{}' AND
-                strikeprice = {} ORDER BY date ASC""".format(option_entry['symbol'], option_entry['expiry'],
-                                                                 option_entry['type'], exit_date,
-                                                                 option_entry['strikeprice'])
+        qry = """SELECT * FROM opthist WHERE symbol = '{}' AND expiry = '{}' AND type = '{}' AND date > '{}' AND """ \
+              """strikeprice = {} ORDER BY date ASC LIMIT 1""".format(option_entry['symbol'], option_entry['expiry'],
+                                                              option_entry['type'], exit_date,
+                                                              option_entry['strikeprice'])
 
-        print("OptionsHist.option_exit_data", qry)
+        # print("OptionsHist.option_exit_data option_entry", option_entry)
+        # print("OptionsHist.option_exit_data exit_date", exit_date)
+        # print("OptionsHist.option_exit_data", qry)
 
         c = self.conn.cursor()
         c.execute(qry)
@@ -180,7 +182,82 @@ class OptionsHist:
 
         #print("OptionsHist.option_exit_data", OptionsHist.columns, rows)
 
-        #print("OptionsHist.option_exit_data2", dict(zip(OptionsHist.columns, rows[0])))
+        # print("OptionsHist.option_exit_data2", dict(zip(OptionsHist.columns, rows[0])))
+
 
         return dict(zip(OptionsHist.columns, rows[0]))
+
+    def option_data_between_entry_exit(self, trade):
+
+        qry = """SELECT * FROM opthist WHERE symbol = '{}' AND expiry = '{}' AND type = '{}' AND date > '{}' AND """ \
+              """date < '{}' AND strikeprice = {} ORDER BY date ASC""".format(trade['entry']['symbol'],
+                                                                            trade['entry']['expiry'],
+                                                                            trade['entry']['type'],
+                                                                            trade['entry']['date'],
+                                                                            trade['exit']['date'],
+                                                                            trade['entry']['strikeprice'])
+
+        # print("OptionsHist.option_data_between_entry_exit", qry)
+
+        c = self.conn.cursor()
+        c.execute(qry)
+        rows = c.fetchall()
+
+        transposed_rows = list(zip(*rows))
+
+        d = dict(zip(OptionsHist.columns, transposed_rows))
+
+
+
+
+        # print("OptionsHist.option_data_between_entry_exit", rows)
+        # print("OptionsHist.option_data_between_entry_exit", d)
+
+        return d
+
+
+    def option_data_post_entry(self, trade):
+        """Return option data for all dates till expiry starting from entry date + 1
+                Return format: {'symbol': (day1, day2, ..., expiryday),
+                                'expiry': (day1, day2, ..., expiryday),
+                                'type': (), 'strikeprice': (), 'open': (), 'high': (), 'low': (), 'close': (),'ltp': (),
+                                . . . . ., 'position': {day1 in YYYY-MM-DD: position index,
+                                                        day2 in YYYY-MM-DD: position index,
+                                                        .....,
+                                                        expiryday in YYYY-MM-DD: position index}
+        """
+
+        qry = """SELECT * FROM opthist WHERE symbol = '{}' AND expiry = '{}' AND type = '{}' AND date > '{}' AND """ \
+              """strikeprice = {} ORDER BY date ASC""".format(trade['entry']['symbol'],
+                                                              trade['entry']['expiry'],
+                                                              trade['entry']['type'],
+                                                              trade['entry']['date'],
+                                                              trade['entry']['strikeprice'])
+
+        # print("OptionsHist.option_data_between_entry_exit", qry)
+
+        c = self.conn.cursor()
+        c.execute(qry)
+        rows = c.fetchall()
+
+        # print("OptionsHist.option_data_post_entry", rows)
+
+        transposed_rows = list(zip(*rows))
+
+        d = dict(zip(OptionsHist.columns, transposed_rows))
+
+        """
+
+
+        dates = d.pop('date')
+
+        d['position'] = {}
+        for i in range(0, len(dates)):
+            d['position'][dates[i]] = i
+
+        # print("OptionsHist.option_data_between_entry_exit", rows)
+        """
+        # print("OptionsHist.option_data_post_entry", d)
+
+        return d
 

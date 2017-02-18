@@ -22,7 +22,11 @@ s = tt.signals()
 t = tt.trades(s)
 # tt.sel_options(t)
 # tt.backtest(start='2016-01-04',end='2016-06-14')
+# print(tt.backtest(start='2007-03-01',end='2007-06-29'))
+# print(tt.backtest(start='2008-08-14',end='2008-11-20'))
+# print(tt.backtest(start='2010-02-01',end='2010-10-29'))
 print(tt.backtest())
+
 """
 tt.dataHist.add_column_names('Entry Type', 'Expiry', 'Strike Price', 'Entry Date', 'Entry Open', 'Entry High',
                              'Entry Low', 'Entry Close', 'Entry LTP', 'Exit Date', 'In_Market Expiry',
