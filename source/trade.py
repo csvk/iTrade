@@ -293,9 +293,9 @@ class TradeTest:
                 if on_expiry or on_target_price is not None:
                     # Exit CE option on expiry date
                     trades[CE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
-                    CE_bought, CE_sold = False, True
                     trades[CE_entry_date]['option_data'] = self.option_data(trades[CE_entry_date]['exit']['date'],
                                                                             CE_option_data)
+                    CE_bought, CE_sold = False, True
                     self.write_trade_data_all(trades[CE_entry_date])
                     # Enter next CE option on expiry date
                     selected_option = self.sel_option(self.signal_data(i - 1, "CE Buy"))  # Entry CE Option
@@ -309,9 +309,9 @@ class TradeTest:
                 if on_expiry or on_target_price is not None:
                     # Exit PE option on expiry date
                     trades[PE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
-                    PE_bought, PE_sold = False, True
                     trades[PE_entry_date]['option_data'] = self.option_data(trades[PE_entry_date]['exit']['date'],
                                                                             PE_option_data)
+                    PE_bought, PE_sold = False, True
                     self.write_trade_data_all(trades[PE_entry_date])
                     # Enter next PE option on expiry date
                     selected_option = self.sel_option(self.signal_data(i - 1, "PE Buy"))  # Entry PE Option
@@ -375,7 +375,6 @@ class DataHist:
 
         col = 1
         while self.wsc.cell(row=1, column=col).value is not None:
-            # self.header.append([self.wsc.cell(row=1, column=col).value, col-1])
             self.header[self.wsc.cell(row=1, column=col).value] = col - 1
             col += 1
 
