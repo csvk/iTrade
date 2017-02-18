@@ -27,13 +27,3 @@ t = tt.trades(s)
 # print(tt.backtest(start='2010-02-01',end='2010-10-29'))
 print(tt.backtest())
 
-"""
-tt.dataHist.add_column_names('Entry Type', 'Expiry', 'Strike Price', 'Entry Date', 'Entry Open', 'Entry High',
-                             'Entry Low', 'Entry Close', 'Entry LTP', 'Exit Date', 'In_Market Expiry',
-                             'In_Market Strike Price', 'In_Market Open', 'In_Market High', 'In_Market Low',
-                             'In_Market Close', 'In_Market LTP')
-print(tt.dataHist.header)
-data = {'Entry Type':'PE', 'Expiry':'test', 'Strike Price':10}
-tt.dataHist.write_data_by_bar(10, data)
-tt.dataHist.write_data_by_date('2006-12-11', data)
-"""

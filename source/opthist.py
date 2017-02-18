@@ -22,7 +22,6 @@ class OptionsHist:
 
         # variables
         self.conn = None
-        # self.selectedOption = ([(column, []) for column in OptionsHist.columns])
 
         print('OptionsHist.__init__', db)
         self.conn = sqlite3.connect(db)
@@ -32,21 +31,14 @@ class OptionsHist:
 
         qry = '''SELECT * FROM opthist WHERE symbol={}'''.format(symbol)
 
-        print('OptionsHist.read', symbol)
-
         for field, val in kwargs.items():
             print('OptionsHist.read', field, ": ", val)
             qry += ' AND {} = {}'.format(field, val)
             # qry = qry + ' AND {} = {}'.format(field, val)
 
-        print('OptionsHist.read', qry)
-
         c = self.conn.cursor()
         c.execute(qry)
         rows = c.fetchall()
-
-        for row in rows:
-            print('OptionsHist.read', row)
 
     def expiry_month(self, date):
 
@@ -79,8 +71,6 @@ class OptionsHist:
         """ Return immediate immediate option data """
 
         qry = '''SELECT * FROM opthist WHERE symbol={}'''.format(symbol)
-
-        print("OptionsHist.immediate_opt", symbol, kwargs)
 
         orderby = None
 
@@ -116,22 +106,17 @@ class OptionsHist:
 
         qry += ' ORDER BY expiry ASC, date ASC, strikeprice {} LIMIT 1'.format(orderby)
 
-        print("OptionsHist.immediate_opt", qry)
-
         c = self.conn.cursor()
         c.execute(qry)
         rows = c.fetchall()
 
-        print('opthist.immediate_opt', rows[0])
         return dict(zip(OptionsHist.columns, rows[0]))
 
 
     def nth_opt(self, nth_expiry, nth_strike, midmonth_cutoff, entrytime, **kwargs):
         """ Return nth option data """
 
-        qry = '''SELECT * FROM opthist WHERE''' #symbol={}'''.format(kwargs['symbol'])
-
-        # print("OptionsHist.nth_opt", kwargs)
+        qry = '''SELECT * FROM opthist WHERE'''
 
         for field, val in kwargs.items():
             #print("# ", field, val)
@@ -157,8 +142,6 @@ class OptionsHist:
 
         qry += ' ORDER BY date ASC, expiry ASC  LIMIT 1'
 
-        # print("OptionsHist.nth_opt", qry)
-
         c = self.conn.cursor()
         c.execute(qry)
         rows = c.fetchall()
@@ -172,18 +155,9 @@ class OptionsHist:
                                                               option_entry['type'], exit_date,
                                                               option_entry['strikeprice'])
 
-        # print("OptionsHist.option_exit_data option_entry", option_entry)
-        # print("OptionsHist.option_exit_data exit_date", exit_date)
-        # print("OptionsHist.option_exit_data", qry)
-
         c = self.conn.cursor()
         c.execute(qry)
         rows = c.fetchall()
-
-        #print("OptionsHist.option_exit_data", OptionsHist.columns, rows)
-
-        # print("OptionsHist.option_exit_data2", dict(zip(OptionsHist.columns, rows[0])))
-
 
         return dict(zip(OptionsHist.columns, rows[0]))
 
@@ -197,8 +171,6 @@ class OptionsHist:
                                                                             trade['exit']['date'],
                                                                             trade['entry']['strikeprice'])
 
-        # print("OptionsHist.option_data_between_entry_exit", qry)
-
         c = self.conn.cursor()
         c.execute(qry)
         rows = c.fetchall()
@@ -206,12 +178,6 @@ class OptionsHist:
         transposed_rows = list(zip(*rows))
 
         d = dict(zip(OptionsHist.columns, transposed_rows))
-
-
-
-
-        # print("OptionsHist.option_data_between_entry_exit", rows)
-        # print("OptionsHist.option_data_between_entry_exit", d)
 
         return d
 
@@ -234,30 +200,13 @@ class OptionsHist:
                                                               trade['entry']['date'],
                                                               trade['entry']['strikeprice'])
 
-        # print("OptionsHist.option_data_between_entry_exit", qry)
-
         c = self.conn.cursor()
         c.execute(qry)
         rows = c.fetchall()
 
-        # print("OptionsHist.option_data_post_entry", rows)
-
         transposed_rows = list(zip(*rows))
 
         d = dict(zip(OptionsHist.columns, transposed_rows))
-
-        """
-
-
-        dates = d.pop('date')
-
-        d['position'] = {}
-        for i in range(0, len(dates)):
-            d['position'][dates[i]] = i
-
-        # print("OptionsHist.option_data_between_entry_exit", rows)
-        """
-        # print("OptionsHist.option_data_post_entry", d)
 
         return d
 
