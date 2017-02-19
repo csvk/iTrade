@@ -232,8 +232,7 @@ class TradeTest:
                     self.dataHist.write_data_by_date(data['date'][i], daily_data)
 
 
-    def backtest(self, start=0, end=0, latitude=0, exit_target=0, nth_expiry=0, nth_strike=0, midmonth_cutoff=10,
-                 entrytime='sod'):
+    def backtest(self, start=0, end=0, exit_target=0, nth_expiry=0, nth_strike=0, midmonth_cutoff=10, entrytime='sod'):
         """Return historical trades
         Return format: {entry date in YYYY-MM-DD: {"entry": {option data from sel_option()},
                                                    "exit": {option data from option_exit_data()}
@@ -244,7 +243,6 @@ class TradeTest:
                         }
         Call format: backtest(start=0,              start date for backtest in YYYY-MM-DD
                               end=0,                end date for backtest in YYYY-MM-DD
-                              latitude=0,           additional percentage difference required for buy/sell signals
                               exittarget=2,         exit target in multiple of entry price
                               nth_expiry=0,         option expiry month to be selected
                               nth_strike=0,         option strike price to be selected
