@@ -153,28 +153,22 @@ class TradeTest:
         return exit_data
 
 
-    def check_exit_target(self, trade, exit_target, option_data):
+    def check_exit_target(self, entry_price, date, exit_target, option_data):
 
-        exit_date, exit_price, exit_time = None, None, None
-        entry_price = trade['entry']['open']
         target_exit_price = entry_price * exit_target if exit_target > 0 else None
+        target_exit = None
 
-        if target_exit_price is None:
-            return None
+        if date in option_data['date'] and target_exit_price is not None:
+            if target_exit_price <= option_data['open'][option_data['date'].index(date)]:
+                target_exit = 'Target - Open'
+            elif target_exit_price <= option_data['high'][option_data['date'].index(date)]:
+                target_exit = 'Target - High'
 
-        for date, pos in option_data['position'].items():
-            if target_exit_price <= option_data['open'][pos]:
-                exit_price = option_data['open'][pos]
-                exit_date = date
-                exit_time = 'open'
-                break
-            elif target_exit_price <= option_data['high'][pos] * 0.9:
-                exit_price = target_exit_price
-                exit_date = date
-                exit_time = 'high'
-                break
+        return target_exit
 
-        return {'date': exit_date, 'price': exit_price, 'time': exit_time}
+
+
+
 
     def option_data(self, exit_date, option_data):
 
@@ -288,14 +282,22 @@ class TradeTest:
         for i in range(self.dataHist.barindex[start], self.dataHist.barindex[end]):
 
             if CE_bought:
+                # print('TradeTest.backtest', trades[CE_entry_date])
                 on_expiry = self.dataHist.value['Date'][i] == CE_option_data['date'][len(CE_option_data['date'])-1]
-                on_target_price = self.check_exit_target(trades[CE_entry_date], exit_target, CE_option_data)
+                on_target_price = self.check_exit_target(trades[CE_entry_date]['entry']['open'],
+                                                         self.dataHist.value['Date'][i], exit_target,
+                                                         CE_option_data)
                 if on_expiry or on_target_price is not None:
-                    # Exit CE option on expiry date
-                    trades[CE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
+                    if on_expiry:
+                        # Exit CE option on expiry date
+                        trades[CE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
+                    elif on_target_price is not None:
+                        # Exit CE option if target price met
+                        trades[CE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i],
+                                                         'exittype': on_target_price}
                     trades[CE_entry_date]['option_data'] = self.option_data(trades[CE_entry_date]['exit']['date'],
                                                                             CE_option_data)
-                    CE_bought, CE_sold = False, True
+                    # CE_bought, CE_sold = False, True
                     self.write_trade_data_all(trades[CE_entry_date])
                     # Enter next CE option on expiry date
                     selected_option = self.sel_option(self.signal_data(i - 1, "CE Buy"))  # Entry CE Option
@@ -305,13 +307,22 @@ class TradeTest:
                     CE_option_data = self.oh.option_data_post_entry(trades[CE_entry_date])
                     CE_bought, CE_sold = True, False
             elif PE_bought:
+                # print('TradeTest.backtest', trades[PE_entry_date])
                 on_expiry = self.dataHist.value['Date'][i] == PE_option_data['date'][len(PE_option_data['date']) - 1]
+                on_target_price = self.check_exit_target(trades[PE_entry_date]['entry']['open'],
+                                                         self.dataHist.value['Date'][i], exit_target,
+                                                         PE_option_data)
                 if on_expiry or on_target_price is not None:
-                    # Exit PE option on expiry date
-                    trades[PE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
+                    if on_expiry:
+                        # Exit PE option on expiry date
+                        trades[PE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
+                    elif on_target_price is not None:
+                        # Exit PE option if target price met
+                        trades[PE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i],
+                                                         'exittype': on_target_price}
                     trades[PE_entry_date]['option_data'] = self.option_data(trades[PE_entry_date]['exit']['date'],
                                                                             PE_option_data)
-                    PE_bought, PE_sold = False, True
+                    # PE_bought, PE_sold = False, True
                     self.write_trade_data_all(trades[PE_entry_date])
                     # Enter next PE option on expiry date
                     selected_option = self.sel_option(self.signal_data(i - 1, "PE Buy"))  # Entry PE Option
@@ -320,6 +331,8 @@ class TradeTest:
                     trades[PE_entry_date]['entry'] = selected_option
                     PE_option_data = self.oh.option_data_post_entry(trades[PE_entry_date])
                     PE_bought, PE_sold = True, False
+
+
 
             if buy[i]:
                 if PE_bought:
