@@ -277,7 +277,7 @@ class TradeTest:
         CE_bought, CE_sold, PE_bought, PE_sold = False, False, False, False
         CE_entry_date, PE_entry_date = None, None
         CE_option_data, PE_option_data = None, None
-        on_expiry, on_target_price = None, None
+        on_expiry, on_target_price, next_trade_bar = None, None, None
 
         for i in range(self.dataHist.barindex[start], self.dataHist.barindex[end]):
 
@@ -291,16 +291,18 @@ class TradeTest:
                     if on_expiry:
                         # Exit CE option on expiry date
                         trades[CE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
+                        next_trade_bar = i - 1
                     elif on_target_price is not None:
                         # Exit CE option if target price met
                         trades[CE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i],
                                                          'exittype': on_target_price}
+                        next_trade_bar = i if on_target_price == 'Target - High' else i - 1
                     trades[CE_entry_date]['option_data'] = self.option_data(trades[CE_entry_date]['exit']['date'],
                                                                             CE_option_data)
                     # CE_bought, CE_sold = False, True
                     self.write_trade_data_all(trades[CE_entry_date])
                     # Enter next CE option on expiry date
-                    selected_option = self.sel_option(self.signal_data(i - 1, "CE Buy"))  # Entry CE Option
+                    selected_option = self.sel_option(self.signal_data(next_trade_bar, "CE Buy"))  # Entry CE Option
                     CE_entry_date = selected_option['date']
                     trades[CE_entry_date] = {}
                     trades[CE_entry_date]['entry'] = selected_option
@@ -316,16 +318,18 @@ class TradeTest:
                     if on_expiry:
                         # Exit PE option on expiry date
                         trades[PE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i], 'exittype': 'Expiry'}
+                        next_trade_bar = i - 1
                     elif on_target_price is not None:
                         # Exit PE option if target price met
                         trades[PE_entry_date]['exit'] = {'date': self.dataHist.value['Date'][i],
                                                          'exittype': on_target_price}
+                        next_trade_bar = i if on_target_price == 'Target - High' else i - 1
                     trades[PE_entry_date]['option_data'] = self.option_data(trades[PE_entry_date]['exit']['date'],
                                                                             PE_option_data)
                     # PE_bought, PE_sold = False, True
                     self.write_trade_data_all(trades[PE_entry_date])
                     # Enter next PE option on expiry date
-                    selected_option = self.sel_option(self.signal_data(i - 1, "PE Buy"))  # Entry PE Option
+                    selected_option = self.sel_option(self.signal_data(next_trade_bar, "PE Buy"))  # Entry PE Option
                     PE_entry_date = selected_option['date']
                     trades[PE_entry_date] = {}
                     trades[PE_entry_date]['entry'] = selected_option
